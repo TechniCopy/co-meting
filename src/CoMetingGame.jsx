@@ -148,15 +148,15 @@ const POOL_R1 = [
     question: "Bij een ruimtemeting in een eengezinswoning geeft je meter 15 ppm CO aan. Het toestel is in bedrijf. Wat doe je?",
     options: [
       "Niets: de waarde ligt onder de wettelijke grens van 20 ppm, dus de situatie is in orde.",
-      "Je onderzoekt de oorzaak: CO hoort niet in een opstellingsruimte, ook niet onder de grenswaarde.",
+      "Je onderzoekt de oorzaak: boven de 5 ppm is een ruimtemeting verhoogd, ook al is de wettelijke grens nog niet overschreden.",
       "Je stelt het toestel direct buiten bedrijf en meldt de overschrijding aan het bevoegd gezag.",
     ],
     correct: 1,
-    feedbackCorrect: "GOED! 0 ppm is de normale waarde. Elke duidelijk verhoogde waarde vraagt om onderzoek naar de oorzaak, ook als de wettelijke grens nog niet is overschreden.",
-    feedbackWrong: "Onder de 20 ppm is er geen meldplicht, maar 15 ppm is geen normale waarde: CO hoort niet in een opstellingsruimte. Onderzoek de oorzaak.",
-    hint: "De grens van 20 ppm is niet overschreden. Maar is 15 ppm een normale waarde in een opstellingsruimte?",
+    feedbackCorrect: "GOED! Bij een ruimtemeting is 0 tot 5 ppm normaal. Alles daarboven is verhoogd en vraagt om onderzoek naar de oorzaak, ook als de wettelijke grens nog niet is overschreden.",
+    feedbackWrong: "Onder de 20 ppm is er geen meldplicht, maar 15 ppm is geen normale waarde: boven de 5 ppm onderzoek je de oorzaak.",
+    hint: "De grens van 20 ppm is niet overschreden. Maar tot welke waarde is een ruimtemeting normaal?",
     bron: "Lesstof BvV CO verlenging, cluster 2.4 (beoordeling ruimtemeting)",
-    les: "Elke duidelijk verhoogde waarde vraagt om onderzoek, ook onder de 20 ppm",
+    les: "Boven 5 ppm is een ruimtemeting verhoogd: onderzoek de oorzaak",
   },
   {
     // eigen vraag over de uitvoering van de ruimtemeting
@@ -376,20 +376,20 @@ const R1_BAKKEN = [
 
 const R1_KAARTEN = [
   {
-    id: "k1", ppm: 0, sub: "ruimtemeting",
+    id: "k1", ppm: 3, sub: "ruimtemeting",
     situatie: "Eengezinswoning, jaarlijks onderhoud. Meting bij het toestel in bedrijf.",
     juist: "ok",
-    hulp: "Wettelijke grens in de ruimte: 20 ppm. De normale waarde is 0 ppm.",
-    uitlegGoed: "0 ppm is de normale, veilige situatie: buitenlucht bevat vrijwel geen CO.",
-    hintFout: "Buitenlucht bevat vrijwel geen CO. Is deze waarde afwijkend?",
+    hulp: "Bij een ruimtemeting is 0 tot 5 ppm normaal.",
+    uitlegGoed: "3 ppm valt binnen de normale 0 tot 5 ppm: in orde.",
+    hintFout: "Bij een ruimtemeting is 0 tot 5 ppm normaal. Zit 3 ppm daarboven of daaronder?",
   },
   {
     id: "k2", ppm: 9, sub: "ruimtemeting",
     situatie: "Eengezinswoning. Meting bij de rookgasafvoer, toestel in bedrijf.",
     juist: "onderzoek",
-    hulp: "Wettelijke grens in de ruimte: 20 ppm. Maar CO hoort helemaal niet in een opstellingsruimte.",
-    uitlegGoed: "Onder de grens, maar duidelijk verhoogd: CO hoort niet in een opstellingsruimte. Onderzoek de oorzaak.",
-    hintFout: "De grens van 20 ppm is niet overschreden. Maar is 9 ppm normaal in een opstellingsruimte?",
+    hulp: "Wettelijke grens in de ruimte: 20 ppm. Normaal is 0 tot 5 ppm.",
+    uitlegGoed: "Onder de grens, maar boven de 5 ppm en dus verhoogd: onderzoek de oorzaak.",
+    hintFout: "De grens van 20 ppm is niet overschreden. Maar boven de 5 ppm is een waarde niet meer normaal.",
   },
   {
     id: "k3", ppm: 30, sub: "ruimtemeting",
@@ -424,8 +424,8 @@ const R1_KAARTEN = [
     id: "k7", ppm: 17, sub: "ruimtemeting",
     situatie: "Eengezinswoning. Meting bij het toestel in bedrijf.",
     juist: "onderzoek",
-    uitlegGoed: "Onder de wettelijke grens van 20 ppm, maar ver boven de normale 0 ppm: oorzaak onderzoeken.",
-    hintFout: "Vergelijk met de wettelijke grens van 20 ppm en bedenk wat een normale waarde is.",
+    uitlegGoed: "Onder de wettelijke grens van 20 ppm, maar ver boven de normale 5 ppm: oorzaak onderzoeken.",
+    hintFout: "Vergelijk met de wettelijke grens van 20 ppm en met wat nog normaal is (0 tot 5 ppm).",
   },
 ];
 
@@ -474,7 +474,7 @@ function RondeGrenswaarden({ addScore, onDone }) {
           de ruimtemeting doe je met je <b>persoonlijke CO-detector</b>: een klein, gekalibreerd kastje dat je <b>op borsthoogte</b> draagt. Meet met het toestel <b>in bedrijf</b>, bij het toestel en de rookgasafvoer.
         </UitlegItem>
         <UitlegItem term="Zo beoordeel je">
-          alleen <b>0 ppm</b> is normaal. Elke verhoogde waarde vraagt om <b>onderzoek</b>; boven de wettelijke grens grijp je <b>direct in</b>.
+          <b>0 tot 5 ppm</b> is normaal. Alles daarboven is verhoogd en vraagt om <b>onderzoek</b>; boven de wettelijke grens grijp je <b>direct in</b>.
         </UitlegItem>
         <UitlegItem term="Spiekbriefje">
           de grenswaarden staan tijdens het spelen op je spiekbriefje. Na drie metingen klapt het dicht en moet je ze zelf kennen.
@@ -548,7 +548,7 @@ function RondeGrenswaarden({ addScore, onDone }) {
 
       <UitlegStrook key={spiekOpen ? "open" : "dicht"} title="Spiekbriefje: de grenswaarden" defaultOpen={spiekOpen}>
         <p>Ruimte: boven <b>20 ppm</b> direct ingrijpen · gestapelde bouw na onderhoud: <b>25 ppm</b>.</p>
-        <p>Verhoogd maar onder de grens: onderzoeken. Alleen <b>0 ppm</b> is normaal.</p>
+        <p>Normaal is <b>0 tot 5 ppm</b>. Daarboven: verhoogd, oorzaak onderzoeken, ook onder de wettelijke grens.</p>
         <p>Jouw blootstelling (Arbo): <b>25 ppm</b> gemiddeld over 8 uur, piek <b>50 ppm</b> hooguit een kwartier.</p>
       </UitlegStrook>
 
@@ -602,7 +602,7 @@ function RondeGrenswaarden({ addScore, onDone }) {
       {popup && (
         <FeedbackPopup
           type="correct"
-          text="Alle metingen beoordeeld! Onthoud: alleen 0 ppm is normaal, verhoogd is onderzoeken, en boven de grens (20 ppm, in gestapelde bouw na onderhoud 25 ppm) grijp je direct in."
+          text="Alle metingen beoordeeld! Onthoud: 0 tot 5 ppm is normaal, daarboven onderzoek je de oorzaak, en boven de grens (20 ppm, in gestapelde bouw na onderhoud 25 ppm) grijp je direct in."
           onClose={onDone}
           buttonText="Naar de controlevraag"
         />
@@ -715,7 +715,7 @@ function RondeRuimteOfRookgas({ addScore, onDone }) {
     return (
       <RondeIntro
         title="Ronde 2: Ruimte of rookgas?"
-        intro="De klassieke instinker op het examen: welke grenswaarde is hier eigenlijk van toepassing?"
+        intro="De kernvraag bij elke meting: welke grenswaarde is hier van toepassing?"
         onStart={() => setFase("spel")}
       >
         <UitlegItem term="Rookgasmeting">
@@ -1029,7 +1029,7 @@ function RondeWieMeldJe({ addScore, onDone }) {
     }
 
     setFoutUitleg(fout.map((id) => R4_PARTIJEN.find((p) => p.id === id).uitleg));
-    setSelectie(goed); // instinkers vallen af, de speler vult verder aan
+    setSelectie(goed); // verkeerde partijen vallen af, de speler vult verder aan
   };
 
   const kiesScenario = (ja) => {
@@ -1387,7 +1387,7 @@ const SCREEN_INFO = {
 
 // De kern van het leerdoel: staat altijd op het eindscherm.
 const LEERMOMENTEN = [
-  "0 ppm is normaal; elke verhoogde waarde in de opstellingsruimte vraagt om onderzoek",
+  "Bij een ruimtemeting is 0 tot 5 ppm normaal; alles daarboven is verhoogd en vraagt om onderzoek",
   "Boven 20 ppm in de ruimte: buiten bedrijf, onderzoeken en melden (gestapelde bouw na onderhoud: grens 25 ppm)",
   "Rookgas: eerst de fabrikantseis; zonder eis geldt 50 ppm (type A), 200 ppm (type B) of 400 ppm (type C)",
   "Buiten bedrijf: uitschakelen, toestelkraan dicht, label, klant informeren, vastleggen; melden aan bewoner, eigenaar, bevoegd gezag en certificerende instelling, ook na direct herstel",
@@ -1497,7 +1497,7 @@ export default function CoMetingGame({ initialScreen = "start", onExit }) {
                 <p className="mb-2">
                   Een CO-meter geeft alleen een getal. Jij maakt er een oordeel van: is dit normaal, verhoogd of een overschrijding? Daarvoor moet je de <b>grenswaarden</b> kennen, en vooral weten <b>welke grens</b> waar geldt.
                 </p>
-                <p>Eerst de ruimtemeting, daarna de instinker van het examen: ruimte of rookgas?</p>
+                <p>Eerst de ruimtemeting, daarna het verschil tussen ruimte en rookgas.</p>
               </div>
             </IntroScreen>
           )}
