@@ -12,7 +12,7 @@
 //   R5  De vrijgave (kaal)   → scenario's beoordelen zonder hulp
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Gauge, AlertTriangle, CheckCircle, Tag, Users, ClipboardList, Power,
   Wrench, ShieldCheck, XCircle,
@@ -24,10 +24,10 @@ import {
 } from "./shared.jsx";
 
 // Maximale score, opgebouwd uit:
-// R1 sorteren 7×5=35 · R2 grens kiezen + beoordelen 6×(5+5)=60
+// R1 detector-opdracht 5 + sorteren 7×5=35 · R2 grens kiezen + beoordelen 6×(5+5)=60
 // R3 volgorde 5×5=25 · R4 partijen 4×5 + scenario 5 = 25 · R5 scenario's 5×5=25
 // 5 MC-controles ×10=50
-const MAX_SCORE = 220;
+const MAX_SCORE = 225;
 
 // ─── APP-KOPPELING (postMessage-contract voor de lesstof-app) ───
 
@@ -42,22 +42,57 @@ function meldVoortgang(payload) {
   }
 }
 
-// ─── SVG: CO-METER (handmeter met display) ───
+// ─── SVG: PERSOONLIJKE CO-DETECTOR (ruimtemeting, oranje kastje op de borst) ───
 
-function CoMeter({ ppm, sub, w = 230 }) {
+function CoMelderSVG({ ppm, w = 118 }) {
   return (
-    <svg viewBox="0 0 230 140" width={w} role="img" aria-label={`CO-meter: ${ppm} ppm`}>
-      <rect x="8" y="4" width="214" height="132" rx="18" fill={C.brownText} stroke="#2A1507" strokeWidth="2" />
-      <rect x="22" y="18" width="186" height="72" rx="8" fill="#DCE8C6" stroke="#2A1507" strokeWidth="2" />
-      <text x="32" y="34" fontSize="10" fontWeight="700" fill={C.brown} letterSpacing="1">CO</text>
-      <text x="198" y="34" textAnchor="end" fontSize="8" fill={C.brown} fontStyle="italic">{sub}</text>
-      <text x="115" y="72" textAnchor="middle" fontSize="30" fontWeight="800" fill={C.brownText}>
+    <svg viewBox="0 0 120 172" width={w} role="img" aria-label={`Persoonlijke CO-detector: ${ppm} ppm`}>
+      <rect x="10" y="6" width="100" height="160" rx="24" fill="#E8791E" stroke={C.brownText} strokeWidth="2.5" />
+      {/* alarm-leds */}
+      <circle cx="24" cy="20" r="4" fill="#C0392B" stroke={C.brownText} strokeWidth="1" />
+      <circle cx="96" cy="20" r="4" fill="#C0392B" stroke={C.brownText} strokeWidth="1" />
+      {/* display */}
+      <rect x="28" y="26" width="64" height="36" rx="4" fill="#DCE8C6" stroke={C.brownText} strokeWidth="2" />
+      <text x="60" y="51" textAnchor="middle" fontSize="17" fontWeight="800" fill={C.brownText}>
         {ppm}
-        <tspan fontSize="12" fontWeight="700" dx="4">ppm</tspan>
+        <tspan fontSize="8" fontWeight="700" dx="2">ppm</tspan>
       </text>
-      <circle cx="70" cy="112" r="9" fill={C.beigeMid} stroke="#2A1507" strokeWidth="1.5" />
-      <circle cx="115" cy="112" r="9" fill={C.olive} stroke="#2A1507" strokeWidth="1.5" />
-      <circle cx="160" cy="112" r="9" fill={C.beigeMid} stroke="#2A1507" strokeWidth="1.5" />
+      {/* band met type-aanduiding */}
+      <rect x="24" y="70" width="72" height="14" rx="7" fill={C.brownText} />
+      <text x="60" y="80" textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#F5EFE4" letterSpacing="0.5">CO-DETECTOR</text>
+      {/* sensor */}
+      <circle cx="60" cy="113" r="21" fill="#C9660F" stroke={C.brownText} strokeWidth="2" />
+      <circle cx="60" cy="113" r="11" fill="#E8791E" stroke={C.brownText} strokeWidth="1.5" />
+      {/* CO-badge */}
+      <rect x="36" y="144" width="48" height="14" rx="7" fill={C.red} stroke={C.brownText} strokeWidth="1.5" />
+      <text x="60" y="154.5" textAnchor="middle" fontSize="9" fontWeight="800" fill="white">CO</text>
+    </svg>
+  );
+}
+
+// ─── SVG: ROOKGASANALYSEMETER (rookgasmeting, blauwe meter met sonde) ───
+
+function RookgasMeterSVG({ ppm, w = 235 }) {
+  return (
+    <svg viewBox="0 0 235 152" width={w} role="img" aria-label={`Rookgasanalysemeter: ${ppm} ppm CO in het rookgas`}>
+      {/* rookgasafvoer met meetpunt */}
+      <rect x="6" y="10" width="88" height="18" rx="4" fill={C.beigeMid} stroke={C.brownText} strokeWidth="2" />
+      <text x="50" y="42" textAnchor="middle" fontSize="7.5" fontStyle="italic" fill={C.brown}>rookgasafvoer</text>
+      {/* sonde in het meetpunt */}
+      <line x1="52" y1="28" x2="52" y2="12" stroke="#8E9AA3" strokeWidth="4" />
+      <rect x="42" y="46" width="20" height="34" rx="5" fill="#2F6E9E" stroke={C.brownText} strokeWidth="2" transform="rotate(180 52 63)" />
+      <line x1="52" y1="28" x2="52" y2="48" stroke="#8E9AA3" strokeWidth="4" />
+      {/* kabel van sonde naar meter */}
+      <path d="M 52 80 C 52 118, 100 130, 132 112" fill="none" stroke={C.brownText} strokeWidth="3" strokeLinecap="round" />
+      {/* meterbehuizing */}
+      <rect x="130" y="8" width="86" height="136" rx="14" fill="#2F6E9E" stroke={C.brownText} strokeWidth="2.5" />
+      <rect x="140" y="20" width="66" height="70" rx="5" fill="#EAF3F8" stroke={C.brownText} strokeWidth="2" />
+      <text x="147" y="34" fontSize="9" fontWeight="700" fill={C.brown}>CO</text>
+      <text x="199" y="34" textAnchor="end" fontSize="7" fontStyle="italic" fill={C.brown}>rookgas</text>
+      <text x="173" y="66" textAnchor="middle" fontSize="21" fontWeight="800" fill={C.brownText}>{ppm}</text>
+      <text x="173" y="81" textAnchor="middle" fontSize="9" fontWeight="700" fill={C.brown}>ppm</text>
+      <circle cx="173" cy="114" r="13" fill="#255A83" stroke={C.brownText} strokeWidth="2" />
+      <circle cx="173" cy="114" r="5.5" fill="#EAF3F8" />
     </svg>
   );
 }
@@ -122,6 +157,21 @@ const POOL_R1 = [
     hint: "De grens van 20 ppm is niet overschreden. Maar is 15 ppm een normale waarde in een opstellingsruimte?",
     bron: "Lesstof BvV CO verlenging, cluster 2.4 (beoordeling ruimtemeting)",
     les: "Elke duidelijk verhoogde waarde vraagt om onderzoek, ook onder de 20 ppm",
+  },
+  {
+    // eigen vraag over de uitvoering van de ruimtemeting
+    question: "Hoe voer je een CO-ruimtemeting in een opstellingsruimte uit?",
+    options: [
+      "Met je gekalibreerde persoonlijke CO-detector op borsthoogte, terwijl het toestel in bedrijf is; je meet bij het toestel en de rookgasafvoer.",
+      "Met de sonde van de rookgasanalysemeter in het meetpunt van de rookgasafvoer.",
+      "Met een CO-melder die je op de vloer naast het toestel legt, terwijl het toestel uit staat.",
+    ],
+    correct: 0,
+    feedbackCorrect: "GOED! De ruimtemeting doe je met je persoonlijke, gekalibreerde CO-detector op borsthoogte, met het toestel in bedrijf. De sonde in het meetpunt hoort bij de rookgasmeting, niet bij de ruimtemeting.",
+    feedbackWrong: "De sonde in het meetpunt is de rookgasmeting. De ruimtemeting doe je met je persoonlijke detector op borsthoogte, met het toestel in bedrijf.",
+    hint: "Denk aan het verschil tussen meten in de ruimte en meten in het rookgas, en waar je je detector draagt.",
+    bron: "Kleintje Gas, h.8 en lesstof cluster 2.4 (uitvoering ruimtemeting)",
+    les: "Ruimtemeting: persoonlijke detector op borsthoogte, toestel in bedrijf",
   },
 ];
 
@@ -379,14 +429,24 @@ const R1_KAARTEN = [
   },
 ];
 
+const R1_DRAAGPLEKKEN = [
+  { id: "borst", label: "Op borsthoogte, aan je borstzak", goed: true },
+  { id: "broekzak", label: "In je broekzak", goed: false },
+  { id: "kist", label: "In je gereedschapskist, naast het toestel", goed: false },
+  { id: "ketel", label: "Bovenop het toestel", goed: false },
+];
+
 function RondeGrenswaarden({ addScore, onDone }) {
-  const [fase, setFase] = useState("uitleg");
+  const [fase, setFase] = useState("uitleg"); // uitleg | waar | spel
+  const [waarGoed, setWaarGoed] = useState(false);
+  const [waarHint, setWaarHint] = useState(null);
   const [idx, setIdx] = useState(0);
   const [laatste, setLaatste] = useState(null); // uitleg van de laatst goed geplaatste kaart
   const [hint, setHint] = useState(null);
   const [popup, setPopup] = useState(false);
 
   const kaart = R1_KAARTEN[idx];
+  const spiekOpen = idx < 3; // spiekbriefje klapt dicht zodra de hulp-kaarten voorbij zijn
 
   const drop = (bakId) => (payload, point) => {
     if (payload !== kaart.id) return undefined;
@@ -407,28 +467,72 @@ function RondeGrenswaarden({ addScore, onDone }) {
     return (
       <RondeIntro
         title="Ronde 1: De grenswaarden"
-        intro="Missie 1, ronde 1. Eerst de basis: hoe voer je de ruimtemeting uit en welke waarden zijn een probleem?"
-        onStart={() => setFase("spel")}
+        intro="Missie 1, ronde 1. Kort de basis, daarna ga je meteen meten."
+        onStart={() => setFase("waar")}
       >
-        <UitlegItem term="Ruimtemeting">
-          je meet de CO-concentratie in de opstellingsruimte met een <b>gekalibreerde CO-meter</b>, met het toestel in bedrijf. Meet in de buurt van het toestel en de rookgasafvoer en houd je persoonlijke CO-melder op borsthoogte in de gaten.
+        <UitlegItem term="Zo meet je">
+          de ruimtemeting doe je met je <b>persoonlijke CO-detector</b>: een klein, gekalibreerd kastje dat je <b>op borsthoogte</b> draagt. Meet met het toestel <b>in bedrijf</b>, bij het toestel en de rookgasafvoer.
         </UitlegItem>
-        <UitlegItem term="0 ppm">
-          de normale, veilige waarde: buitenlucht bevat vrijwel geen CO.
+        <UitlegItem term="Zo beoordeel je">
+          alleen <b>0 ppm</b> is normaal. Elke verhoogde waarde vraagt om <b>onderzoek</b>; boven de wettelijke grens grijp je <b>direct in</b>.
         </UitlegItem>
-        <UitlegItem term="Verhoogde waarde">
-          elke duidelijk verhoogde waarde vraagt om <b>onderzoek naar de oorzaak</b>, ook onder de wettelijke grens.
-        </UitlegItem>
-        <UitlegItem term="Boven 20 ppm">
-          overschrijding van de wettelijke grens in de ruimte: toestel <b>buiten bedrijf</b>, onderzoek instellen en <b>melden</b>.
-        </UitlegItem>
-        <UitlegItem term="Gestapelde bouw">
-          na onderhoud onder BRL 6000-25 is de meting <b>verplicht</b>; de grens is daar <b>25 ppm</b>. Extra alert: CO kan uit een omliggende woning komen.
-        </UitlegItem>
-        <UitlegItem term="Eigen blootstelling (Arbo)">
-          maximaal <b>25 ppm</b> gemiddeld over 8 uur, piek <b>50 ppm</b> gedurende hooguit een kwartier. Structureel meer: werk staken.
+        <UitlegItem term="Spiekbriefje">
+          de grenswaarden staan tijdens het spelen op je spiekbriefje. Na drie metingen klapt het dicht en moet je ze zelf kennen.
         </UitlegItem>
       </RondeIntro>
+    );
+  }
+
+  if (fase === "waar") {
+    return (
+      <div className="flex-1 flex flex-col items-center p-5">
+        <StepBanner step={1} />
+        <h2 className="text-lg font-bold italic mb-1 text-center" style={{ color: C.brownText }}>
+          Ronde 1: De grenswaarden
+        </h2>
+        <p className="text-xs mb-3 text-center font-medium" style={{ color: C.brown }}>
+          Voordat je de woning binnenstapt: waar draag je je persoonlijke CO-detector?
+        </p>
+        <CoMelderSVG ppm={0} w={100} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md mt-4">
+          {R1_DRAAGPLEKKEN.map((o) => (
+            <button
+              key={o.id}
+              onClick={() => {
+                if (waarGoed) return;
+                if (o.goed) {
+                  addScore(5);
+                  setWaarHint(null);
+                  setWaarGoed(true);
+                } else {
+                  addScore(-5);
+                  setWaarHint("Denk aan wat de detector bewaakt: de lucht die jij inademt.");
+                }
+              }}
+              className="px-3 py-2.5 rounded-xl border-2 text-xs font-bold text-left transition-all hover:shadow"
+              style={{
+                backgroundColor: waarGoed && o.goed ? C.greenLight : "white",
+                borderColor: waarGoed && o.goed ? C.green : C.beigeMid,
+                color: C.brownText,
+              }}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+        {waarHint && (
+          <p className="text-xs text-center italic mt-3 font-medium max-w-md" style={{ color: C.red }}>{waarHint}</p>
+        )}
+        {waarGoed && (
+          <>
+            <p className="text-xs text-center italic mt-3 font-medium max-w-md flex items-start gap-1.5" style={{ color: C.green }}>
+              <CheckCircle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              Precies: op borsthoogte bewaakt hij jouw ademzone, waar je ook bent in de woning.
+            </p>
+            <GameButton onClick={() => setFase("spel")} className="mt-3">Start de metingen</GameButton>
+          </>
+        )}
+      </div>
     );
   }
 
@@ -442,7 +546,13 @@ function RondeGrenswaarden({ addScore, onDone }) {
         Sleep elke meting naar de juiste bak (of tik op de kaart en dan op de bak). Meting {idx + 1} van {R1_KAARTEN.length}.
       </p>
 
-      <CoMeter ppm={kaart.ppm} sub={kaart.sub} />
+      <UitlegStrook key={spiekOpen ? "open" : "dicht"} title="Spiekbriefje: de grenswaarden" defaultOpen={spiekOpen}>
+        <p>Ruimte: boven <b>20 ppm</b> direct ingrijpen · gestapelde bouw na onderhoud: <b>25 ppm</b>.</p>
+        <p>Verhoogd maar onder de grens: onderzoeken. Alleen <b>0 ppm</b> is normaal.</p>
+        <p>Jouw blootstelling (Arbo): <b>25 ppm</b> gemiddeld over 8 uur, piek <b>50 ppm</b> hooguit een kwartier.</p>
+      </UitlegStrook>
+
+      <CoMelderSVG ppm={kaart.ppm} />
 
       <Draggable payload={kaart.id} ghost={<DragCard label={`${kaart.ppm} ppm`} small />}>
         <div
@@ -492,7 +602,7 @@ function RondeGrenswaarden({ addScore, onDone }) {
       {popup && (
         <FeedbackPopup
           type="correct"
-          text="Alle metingen beoordeeld! Onthoud de ijkpunten: 0 ppm is normaal, elke verhoogde waarde vraagt onderzoek, boven 20 ppm grijp je direct in (gestapelde bouw na onderhoud: 25 ppm) en voor jezelf geldt de Arbo-grens van 25 ppm met een piek van 50 ppm gedurende hooguit een kwartier."
+          text="Alle metingen beoordeeld! Onthoud: alleen 0 ppm is normaal, verhoogd is onderzoeken, en boven de grens (20 ppm, in gestapelde bouw na onderhoud 25 ppm) grijp je direct in."
           onClose={onDone}
           buttonText="Naar de controlevraag"
         />
@@ -504,12 +614,12 @@ function RondeGrenswaarden({ addScore, onDone }) {
 // ─── RONDE 2: RUIMTE OF ROOKGAS? ───
 
 const R2_GRENZEN = [
-  { id: "fab", label: "Eis van de fabrikant" },
-  { id: "r20", label: "20 ppm: ruimte" },
-  { id: "r25", label: "25 ppm: ruimte, na onderhoud in gestapelde bouw" },
-  { id: "a50", label: "50 ppm: rookgas type A (open, zonder afvoer)" },
-  { id: "b200", label: "200 ppm: rookgas type B (open, met afvoer)" },
-  { id: "c400", label: "400 ppm: rookgas type C (gesloten)" },
+  { id: "fab", label: "Eis van de fabrikant", kort: "Eis van de fabrikant" },
+  { id: "r20", label: "20 ppm: ruimte", kort: "20 ppm" },
+  { id: "r25", label: "25 ppm: ruimte, na onderhoud in gestapelde bouw", kort: "25 ppm" },
+  { id: "a50", label: "50 ppm: rookgas type A (open, zonder afvoer)", kort: "50 ppm" },
+  { id: "b200", label: "200 ppm: rookgas type B (open, met afvoer)", kort: "200 ppm" },
+  { id: "c400", label: "400 ppm: rookgas type C (gesloten)", kort: "400 ppm" },
 ];
 
 const R2_KAARTEN = [
@@ -609,16 +719,10 @@ function RondeRuimteOfRookgas({ addScore, onDone }) {
         onStart={() => setFase("spel")}
       >
         <UitlegItem term="Rookgasmeting">
-          je meet de CO-waarde <b>in het rookgas zelf</b> (met een sonde in het meetpunt). Iets heel anders dan de ruimtemeting.
+          je meet de CO-waarde <b>in het rookgas zelf</b>, met de sonde van de <b>rookgasanalysemeter</b> in het meetpunt. Die meter ken je uit de MicroGame Rookgasanalyse. Iets heel anders dan de ruimtemeting met je persoonlijke detector.
         </UitlegItem>
-        <UitlegItem term="Fabrikantseis eerst">
-          stelt de fabrikant een eis aan de CO-waarde in het rookgas, dan geldt <b>die eis</b>. Alleen zonder fabrikantseis gebruik je de tabel.
-        </UitlegItem>
-        <UitlegItem term="Tabelwaarden rookgas">
-          <b>type A</b> (open, zonder afvoer) maximaal <b>50 ppm</b> · <b>type B</b> (open, met afvoer) maximaal <b>200 ppm</b> · <b>type C</b> (gesloten) maximaal <b>400 ppm</b>.
-        </UitlegItem>
-        <UitlegItem term="Ruimte">
-          wettelijke grens <b>20 ppm</b>; bij de verplichte meting na onderhoud in gestapelde bouw <b>25 ppm</b>.
+        <UitlegItem term="Welke grens geldt">
+          de <b>eis van de fabrikant</b> gaat altijd voor. Zonder fabrikantseis geldt de tabel; die staat bij de eerste metingen in de antwoordknoppen, bij de laatste twee moet je hem kennen.
         </UitlegItem>
         <UitlegItem term="Let op">
           een hoge waarde in het rookgas betekent nog geen CO in de ruimte, maar is wel een <b>storingssignaal</b>: onvolledige verbranding.
@@ -637,7 +741,7 @@ function RondeRuimteOfRookgas({ addScore, onDone }) {
         Kies eerst de grens die hier geldt, beoordeel daarna de meetwaarde. Meting {idx + 1} van {R2_KAARTEN.length}.
       </p>
 
-      <CoMeter ppm={kaart.ppm} sub={kaart.sub} />
+      {kaart.sub === "rookgasmeting" ? <RookgasMeterSVG ppm={kaart.ppm} /> : <CoMelderSVG ppm={kaart.ppm} />}
 
       <div
         className="border-2 rounded-2xl px-4 py-3 max-w-md w-full mt-3 mb-3 shadow-md text-center"
@@ -653,6 +757,7 @@ function RondeRuimteOfRookgas({ addScore, onDone }) {
         <div className="w-full max-w-md">
           <p className="text-xs font-bold mb-1.5" style={{ color: C.brownText }}>Welke grens geldt hier?</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+            {/* scaffolding-fade: de laatste twee metingen tonen kale grenzen, zonder toesteltype */}
             {R2_GRENZEN.map((g) => (
               <button
                 key={g.id}
@@ -660,7 +765,7 @@ function RondeRuimteOfRookgas({ addScore, onDone }) {
                 className="text-left px-3 py-2 rounded-xl border-2 text-xs font-medium transition-all hover:shadow"
                 style={{ backgroundColor: "white", borderColor: C.beigeMid, color: C.brownText }}
               >
-                {g.label}
+                {idx >= 4 ? g.kort : g.label}
               </button>
             ))}
           </div>
@@ -706,7 +811,7 @@ function RondeRuimteOfRookgas({ addScore, onDone }) {
       {popup && (
         <FeedbackPopup
           type="correct"
-          text="Sterk! Je kiest nu eerst de juiste grens en beoordeelt daarna pas de waarde. Onthoud: fabrikantseis gaat voor, zonder eis geldt de tabel (50/200/400 ppm voor type A/B/C) en in de ruimte geldt 20 ppm (of 25 ppm bij de verplichte meting in gestapelde bouw)."
+          text="Sterk! Eerst de juiste grens kiezen, dan pas oordelen. Fabrikantseis gaat voor; zonder eis geldt 50 ppm (type A), 200 ppm (type B) of 400 ppm (type C)."
           onClose={onDone}
           buttonText="Naar de controlevraag"
         />
@@ -1218,7 +1323,7 @@ function RondeVrijgave({ addScore, onDone }) {
       {popup && (
         <FeedbackPopup
           type="correct"
-          text="Dit was de kaalste en belangrijkste beslissing van het vak: een toestel geef je pas vrij als de oorzaak is gevonden en verholpen en een controlemeting aantoont dat het veilig is. Ventileren of een CO-melder ophangen is nooit de oplossing."
+          text="Zo hoort het: vrijgeven doe je pas als de oorzaak is verholpen en een controlemeting aantoont dat het veilig is. Ventileren of een CO-melder ophangen is nooit de oplossing."
           onClose={onDone}
           buttonText="Naar de laatste controlevraag"
         />
@@ -1263,9 +1368,9 @@ function GameOver({ onRestart }) {
         <AlertTriangle className="w-12 h-12 mx-auto mb-3" style={{ color: C.red }} />
         <h2 className="font-bold italic text-xl mb-2" style={{ color: C.brownText }}>Je hartjes zijn op</h2>
         <p className="text-sm mb-4" style={{ color: C.brown }}>
-          Geen probleem: van fouten leer je. Begin opnieuw en gebruik wat je net hebt geleerd.
+          Geen probleem: van fouten leer je. Je speelt deze ronde opnieuw, met volle hartjes en de score die je aan het begin van de ronde had.
         </p>
-        <GameButton onClick={onRestart} className="w-full">Begin opnieuw</GameButton>
+        <GameButton onClick={onRestart} className="w-full">Speel deze ronde opnieuw</GameButton>
       </div>
     </div>
   );
@@ -1289,12 +1394,22 @@ const LEERMOMENTEN = [
   "Vrijgeven kan pas na oorzaak gevonden en verholpen plus een goede controlemeting; ventileren of een CO-melder is nooit de oplossing",
 ];
 
+const RONDE_SCHERMEN = ["r1", "r2", "r3", "r4", "r5"];
+const MC_NAAR_RONDE = { r1mc: "r1", r2mc: "r2", r3mc: "r3", r4mc: "r4", r5mc: "r5" };
+
 export default function CoMetingGame({ initialScreen = "start", onExit }) {
   const [screen, setScreen] = useState(initialScreen);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(5);
   const [aandacht, setAandacht] = useState([]);
   const juice = useGameJuice();
+
+  // score bij de start van de huidige ronde, voor de herstart als de hartjes op zijn
+  const scoreBijRondeStart = useRef(0);
+  useEffect(() => {
+    if (RONDE_SCHERMEN.includes(screen)) scoreBijRondeStart.current = score;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
 
   // onthoudt waar deze speler de mist in ging; elk punt maar een keer
   const noteer = useCallback((les) => {
@@ -1321,6 +1436,18 @@ export default function CoMetingGame({ initialScreen = "start", onExit }) {
     setScore(0);
     setLives(5);
     setAandacht([]);
+  };
+
+  // hartjes op: niet de hele game opnieuw, maar de huidige ronde
+  const herstartRonde = () => {
+    const doel = MC_NAAR_RONDE[screen] ?? (RONDE_SCHERMEN.includes(screen) ? screen : null);
+    setLives(5);
+    if (!doel) {
+      resetGame();
+      return;
+    }
+    setScore(scoreBijRondeStart.current);
+    setScreen(doel);
   };
 
   useEffect(() => {
@@ -1415,7 +1542,7 @@ export default function CoMetingGame({ initialScreen = "start", onExit }) {
             />
           )}
 
-          {lives === 0 && screen !== "end" && <GameOver onRestart={resetGame} />}
+          {lives === 0 && screen !== "end" && <GameOver onRestart={herstartRonde} />}
 
           <div className="py-2 text-center text-[10px]" style={{ color: C.brown }}>
             Studium B.V. · Vakmanschap CO · MicroGame · De CO-meting · eindterm 2.4, leerdoel 4
