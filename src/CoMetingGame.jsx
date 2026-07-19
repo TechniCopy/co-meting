@@ -1351,7 +1351,7 @@ function StartScreen({ onStart }) {
         <div className="border-2 rounded-2xl p-4 max-w-sm w-full text-xs leading-relaxed" style={{ backgroundColor: C.bgCard, borderColor: C.beigeMid, color: C.brownText }}>
           <p className="font-bold mb-1">Zo werkt het</p>
           <p className="mb-1">Sleep kaarten naar de juiste plek, of tik eerst op een kaart en daarna op de plek waar hij hoort. Sommige rondes werken met knoppen.</p>
-          <p>Goede zet: +5 · foute zet: -5 · controlevraag goed: +10. Je hebt 5 hartjes; elke foute controlevraag kost er een. Zijn ze op, dan begin je opnieuw.</p>
+          <p>Goede zet: +5 · foute zet: -5 · controlevraag goed: +10. Je hebt 5 hartjes; elke foute controlevraag kost er een. Zijn ze op, dan speel je die ronde opnieuw.</p>
         </div>
         <GameButton onClick={onStart}>Start de game</GameButton>
       </div>
