@@ -445,22 +445,24 @@ function RondeGrenswaarden({ addScore, onDone }) {
   const [hint, setHint] = useState(null);
   const [popup, setPopup] = useState(false);
 
+  const [flash, setFlash] = useState(null); // korte kleur-feedback op de aangeklikte knop
   const kaart = R1_KAARTEN[idx];
   const spiekOpen = idx < 3; // spiekbriefje klapt dicht zodra de hulp-kaarten voorbij zijn
 
-  const drop = (bakId) => (payload, point) => {
-    if (payload !== kaart.id) return undefined;
+  const kies = (bakId) => {
+    if (popup) return;
+    setFlash({ bak: bakId, type: bakId === kaart.juist ? "correct" : "wrong" });
+    setTimeout(() => setFlash(null), 450);
     if (bakId === kaart.juist) {
-      addScore(5, point);
+      addScore(5);
       setLaatste(kaart.uitlegGoed);
       setHint(null);
       if (idx + 1 >= R1_KAARTEN.length) setPopup(true);
       else setIdx(idx + 1);
-      return "correct";
+    } else {
+      addScore(-5);
+      setHint(kaart.hintFout);
     }
-    addScore(-5, point);
-    setHint(kaart.hintFout);
-    return "wrong";
   };
 
   if (fase === "uitleg") {
@@ -543,7 +545,7 @@ function RondeGrenswaarden({ addScore, onDone }) {
         Ronde 1: De grenswaarden
       </h2>
       <p className="text-xs mb-3 text-center font-medium" style={{ color: C.brown }}>
-        Sleep elke meting naar de juiste bak (of tik op de kaart en dan op de bak). Meting {idx + 1} van {R1_KAARTEN.length}.
+        Lees de waarde op de meter af en beoordeel de situatie: klik of tik op een van de drie knoppen. Meting {idx + 1} van {R1_KAARTEN.length}.
       </p>
 
       <UitlegStrook key={spiekOpen ? "open" : "dicht"} title="Spiekbriefje: de grenswaarden" defaultOpen={spiekOpen}>
@@ -554,39 +556,38 @@ function RondeGrenswaarden({ addScore, onDone }) {
 
       <CoMelderSVG ppm={kaart.ppm} />
 
-      <Draggable payload={kaart.id} ghost={<DragCard label={`${kaart.ppm} ppm`} small />}>
-        <div
-          className="border-2 rounded-2xl px-4 py-3 max-w-md w-full mt-3 mb-4 shadow-md text-center"
-          style={{ backgroundColor: C.bgCard, borderColor: C.olive }}
-        >
-          <p className="text-sm font-medium leading-snug" style={{ color: C.brownText }}>{kaart.situatie}</p>
-          {kaart.hulp && (
-            <p className="text-[11px] mt-1.5 italic font-medium" style={{ color: C.olive }}>
-              Hulp: {kaart.hulp}
-            </p>
-          )}
-        </div>
-      </Draggable>
+      <div
+        className="border-2 rounded-2xl px-4 py-3 max-w-md w-full mt-3 mb-1 shadow-md text-center"
+        style={{ backgroundColor: C.bgCard, borderColor: C.brownText }}
+      >
+        <p className="text-sm font-medium leading-snug" style={{ color: C.brownText }}>{kaart.situatie}</p>
+        {kaart.hulp && (
+          <p className="text-[11px] mt-1.5 italic font-medium" style={{ color: C.olive }}>
+            Hulp: {kaart.hulp}
+          </p>
+        )}
+      </div>
 
+      <p className="text-xs font-bold mt-2 mb-1.5" style={{ color: C.brownText }}>Wat doe je met deze meting?</p>
       <div className="grid grid-cols-3 gap-2 w-full max-w-md">
-        {R1_BAKKEN.map((bak) => (
-          <DropTarget key={bak.id} id={`r1-${bak.id}`} onDropItem={drop(bak.id)}>
-            {({ isHover, flash }) => (
-              <div
-                className="rounded-xl border-2 p-2.5 min-h-[86px] flex flex-col items-center justify-center text-center transition-colors"
-                style={{
-                  borderStyle: "dashed",
-                  borderColor: flash === "wrong" ? C.red : flash === "correct" ? C.green : isHover ? bak.kleur : C.beigeMid,
-                  backgroundColor: flash === "wrong" ? C.redLight : flash === "correct" ? C.greenLight : isHover ? bak.licht : "white",
-                }}
-              >
-                <span className="w-3.5 h-3.5 rounded-full mb-1 border" style={{ backgroundColor: bak.kleur, borderColor: C.brownText }} />
-                <span className="text-xs font-bold" style={{ color: C.brownText }}>{bak.titel}</span>
-                <span className="text-[10px] italic" style={{ color: C.brown }}>{bak.sub}</span>
-              </div>
-            )}
-          </DropTarget>
-        ))}
+        {R1_BAKKEN.map((bak) => {
+          const f = flash?.bak === bak.id ? flash.type : null;
+          return (
+            <button
+              key={bak.id}
+              onClick={() => kies(bak.id)}
+              className="rounded-xl border-2 p-2.5 min-h-[86px] flex flex-col items-center justify-center text-center transition-all hover:shadow-md active:scale-[0.98]"
+              style={{
+                borderColor: f === "wrong" ? C.red : f === "correct" ? C.green : C.beigeMid,
+                backgroundColor: f === "wrong" ? C.redLight : f === "correct" ? C.greenLight : "white",
+              }}
+            >
+              <span className="w-3.5 h-3.5 rounded-full mb-1 border" style={{ backgroundColor: bak.kleur, borderColor: C.brownText }} />
+              <span className="text-xs font-bold" style={{ color: C.brownText }}>{bak.titel}</span>
+              <span className="text-[10px] italic" style={{ color: C.brown }}>{bak.sub}</span>
+            </button>
+          );
+        })}
       </div>
 
       {hint && (
@@ -738,7 +739,7 @@ function RondeRuimteOfRookgas({ addScore, onDone }) {
         Ronde 2: Ruimte of rookgas?
       </h2>
       <p className="text-xs mb-3 text-center font-medium" style={{ color: C.brown }}>
-        Kies eerst de grens die hier geldt, beoordeel daarna de meetwaarde. Meting {idx + 1} van {R2_KAARTEN.length}.
+        Lees de waarde op de meter af. Kies eerst de grens die hier geldt en beoordeel daarna de waarde. Meting {idx + 1} van {R2_KAARTEN.length}.
       </p>
 
       {kaart.sub === "rookgasmeting" ? <RookgasMeterSVG ppm={kaart.ppm} /> : <CoMelderSVG ppm={kaart.ppm} />}
@@ -1350,7 +1351,7 @@ function StartScreen({ onStart }) {
         </p>
         <div className="border-2 rounded-2xl p-4 max-w-sm w-full text-xs leading-relaxed" style={{ backgroundColor: C.bgCard, borderColor: C.beigeMid, color: C.brownText }}>
           <p className="font-bold mb-1">Zo werkt het</p>
-          <p className="mb-1">Sleep kaarten naar de juiste plek, of tik eerst op een kaart en daarna op de plek waar hij hoort. Sommige rondes werken met knoppen.</p>
+          <p className="mb-1">Meestal klik of tik je gewoon op een knop. Alleen bij de volgordepuzzel sleep je kaarten (of tik je eerst op de kaart en daarna op de plek waar hij hoort).</p>
           <p>Goede zet: +5 · foute zet: -5 · controlevraag goed: +10. Je hebt 5 hartjes; elke foute controlevraag kost er een. Zijn ze op, dan speel je die ronde opnieuw.</p>
         </div>
         <GameButton onClick={onStart}>Start de game</GameButton>
